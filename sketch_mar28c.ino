@@ -51,7 +51,10 @@ const int COLOR_PLAYER = tft.color565(0, 0, 255);
 
 Player player;
 
-int currentLevel = 10;
+// The current level we are on
+int currentLevel = -1;
+// If the player has won the current level
+bool hasWon = true;
 
 Maze* maze;
 
@@ -72,27 +75,34 @@ void setup(void) {
   time = millis() - time;
 
   Serial.println(time, DEC);
-
-  displayWelcomeForStage(tft, 0);
-
-  // Create the maze
-  maze = new Maze(&tft, currentLevel + 4, currentLevel + 4);
-
-  // Reset screen
-  tft.fillScreen(0x0000);
-  
-  maze->draw();
-
-  drawPlayer();
-
-  Serial.println("done");
 }
-bool hasWon = false;
 void loop() {
   if(!hasWon){
     detectInput();
     hasWon = detectWin();
+  } else {
+    // Bring player to next level and welcome them
+    currentLevel++;
+    displayWelcomeForStage(tft, currentLevel);
+
+    // Reset state
+    hasWon = false;
+    player.row = 0;
+    player.col = 0;
+    
+    // Create the maze
+    maze = new Maze(&tft, currentLevel + 4, currentLevel + 4);
+  
+    // Reset screen
+    tft.fillScreen(0x0000);
+    
+    maze->draw();
+  
+    drawPlayer();
   }
+  
+}
+void startLevel(int level){
   
 }
 
