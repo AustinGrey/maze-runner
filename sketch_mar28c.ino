@@ -2,11 +2,11 @@
 
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
-#include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
 #include <SPI.h>
+#include "edge.h"
+#include "cell.h"
 #include "types.h"
-
-using namespace std;
+#include "welcome.h"
 
 #if defined(ARDUINO_FEATHER_ESP32) // Feather Huzzah32
   #define TFT_CS         14
@@ -33,26 +33,6 @@ using namespace std;
 
 // For 1.44" and 1.8" TFT with ST7735 use:
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
-
-// For 1.14", 1.3", 1.54", and 2.0" TFT with ST7789:
-//Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
-
-
-// OPTION 2 lets you interface the display using ANY TWO or THREE PINS,
-// tradeoff being that performance is not as fast as hardware SPI above.
-//#define TFT_MOSI 11  // Data out
-//#define TFT_SCLK 13  // Clock out
-
-// For ST7735-based displays, we will use this call
-//Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
-
-// OR for the ST7789-based displays, we will use this call
-//Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
-
-
-const float p = 3.1415926;
-const int textHeight = 6; //px
-const int textWidth = 5; //px
 
 // Given the size of the maze, determine the size of the cells on this display
 const int numRows = 8;
@@ -93,7 +73,12 @@ Cell cells[numCols*numRows];
 // (w * (h + 1)) + (h * (w + 1))
 Edge edges[(numCols * (numRows + 1)) + (numRows * (numCols + 1))];
 
-
+// The class used to define the player object for game state tracking
+class Player{
+  public:
+    int row = 0;
+    int col = 0;
+};
 Player player;
 
 void setup(void) {
@@ -123,28 +108,7 @@ void setup(void) {
   Serial.println(time, DEC);
   delay(500);
 
-  // Reset screen
-  tft.fillScreen(0x0000);
-
-  // Welcome user
-  tft.setCursor(0, 0);
-  tft.setTextColor(0xFFFF);
-  tft.setTextWrap(true);
-  tft.print("Welcome to");
-
-  const char* splashText = "THE MAZE";
-  int yOffset = 8;
-  int cursorX = (tft.width()- ((textWidth+1)*strlen(splashText))) / 2;
-  int cursorY = ((tft.height()- textHeight) / 2) - yOffset;
-  // All the way down
-  int colorInterval = 255/yOffset;
-  for(int i = 0; i <= yOffset; i++){
-    cursorY++;
-    tft.setTextColor(tft.color565(i * colorInterval, i * colorInterval, i * colorInterval));
-    tft.setCursor(cursorX, cursorY);
-    tft.print(splashText);
-    delay(100);
-  }
+  displayWelcomeForStage(tft, 0);
 
   // Init the cells
   for(int i = 0; i < (sizeof(cells) / sizeof(cells[0])); i++){
@@ -172,11 +136,6 @@ void setup(void) {
   
   genMaze();
   drawPlayer();
-  
-  movePlayer(east);
-  movePlayer(south);
-  movePlayer(east);
-  movePlayer(south);
 
   Serial.println("done");
 }
@@ -275,18 +234,21 @@ Edge& getCellEdge(int cellX, int cellY, Direction dir){
 void genMaze(){
   // Mark a random cell as part of the maze (the seed cell)
   getUnvisitedCell()->visited = true;
+
   
   while(genPath()){
-    drawMaze();
+    // genPaths until you cannot any more
   }
+  
   // Mark the start and end
   getCell(0, 0)->isEntrance = true;
+  drawCell(*getCell(0, 0));
   getCell(numCols - 1, numRows - 1)->isExit = true;
-  drawMaze();
+  drawCell(*getCell(numCols - 1, numRows - 1));
 }
 
 /**
- * Generates a new path in the maze. 
+ * Generates a new path in the maze. Redraws any cells that are newly visited
  * Returns true if successful, false if it was unable to (usually because there are no unvisited cells to generate a path for)
  * Requires: at least one seed cell has been marked visited
  */
@@ -367,6 +329,7 @@ bool genPath(){
 //    Serial.println(")");
     currentCell->visited = true;
     getCellEdge(currentCell->posX, currentCell->posY, currentCell->lastWalked).isBlocking = false;
+    drawCell(*currentCell);
     switch(currentCell->lastWalked){
       case north:
         currentCell = getCell(currentCell->posX, currentCell->posY - 1);
@@ -382,6 +345,7 @@ bool genPath(){
         break;
     }
   }
+  drawCell(*currentCell);
 
   return true;
 }
