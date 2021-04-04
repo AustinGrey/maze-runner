@@ -45,9 +45,12 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 #define JOYSTICK_V_RANGE 1023 // The possible range of values for the joystick, half of this is the center of the joystick
 #define JOYSTICK_H_RANGE 1023 // The possible range of values for the joystick, half of this is the center of the joystick
 
+// Random
+#define PIN_RAND_SEED 15 // Just a pin that is disconnected for the rand seed to get environment noise
+
 
 const int COLOR_PLAYER = tft.color565(0, 0, 255);
-const int COLOR_ENEMY = tft.color565(200, 25, 25);
+const int COLOR_ENEMY = tft.color565(25, 150, 25);
 
 
 Player player;
@@ -63,6 +66,9 @@ Maze* maze;
 void setup(void) {
   Serial.begin(9600);
   Serial.print("Start program");
+
+  // Init the random number generator
+  randomSeed(analogRead(PIN_RAND_SEED));
 
   // Use this initializer if using a 1.8" TFT screen:
   tft.initR(INITR_BLACKTAB);      // Init ST7735S chip, black tab
@@ -163,7 +169,8 @@ void drawPlayer(){
 }
 
 void drawEnemy(){
-  tft.drawCircle(
+  if(currentLevel >= 2) return; // Your friend is 'dead' after this level
+  tft.fillCircle(
     (enemy.col * maze->cellWidth) + maze->paddingX + (maze->cellWidth / 2), 
     (enemy.row * maze->cellHeight) + maze->paddingY + (maze->cellHeight / 2), 
     min(maze->cellWidth, maze->cellHeight) / 2 - 2, 

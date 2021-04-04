@@ -13,9 +13,9 @@ int Maze::COLOR_CELL_UNVISITED;
 int Maze::COLOR_EDGE_BLOCKING;
 int Maze::COLOR_EDGE_OPEN;
 
-Maze::Maze(Adafruit_ST7735* tft_ptr, int numCols, int numRows){
-  this->numCols = numCols;
-  this->numRows = numRows;
+Maze::Maze(Adafruit_ST7735* tft_ptr, int numMazeCols, int numMazeRows){
+  this->numCols = min(numMazeCols, MAX_COLS);
+  this->numRows = min(numMazeRows, MAX_ROWS);
 
   start = cells[0];
   finish = cells[numCols * numRows - 1];
@@ -31,7 +31,7 @@ Maze::Maze(Adafruit_ST7735* tft_ptr, int numCols, int numRows){
   paddingX = ((tft.width() - 2) - (cellWidth * numCols)) / 2;
 
   // Initialize colors for cells and edges in this maze, given the display
-  COLOR_CELL_ENTRANCE = tft.color565(200, 50, 50);
+  COLOR_CELL_ENTRANCE = tft.color565(225, 100, 100);
   COLOR_CELL_EXIT = tft.color565(50, 200, 50);
   COLOR_CELL_VISITED = 0xFFFF;
   COLOR_CELL_UNVISITED = tft.color565(100, 100, 170);

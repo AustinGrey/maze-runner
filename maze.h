@@ -51,7 +51,7 @@ class Maze{
     int numCells();
     
   public:
-    Maze(Adafruit_ST7735* tft_ptr, int numCols, int numRows);
+    Maze(Adafruit_ST7735* tft_ptr, int numMazeCols, int numMazeRows);
     void draw();
     void drawCell(int cellX, int cellY);
     Edge& getCellEdge(int cellX, int cellY, Direction dir);
