@@ -1,7 +1,11 @@
+#ifndef CELL_H
+#define CELL_H
 /*
  * Defines the cell class, which is a place in the maze that could be walked on
  */
 #include "types.h"
+#include <Adafruit_GFX.h>    // Core graphics library
+#include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
 
 class Cell{
   public:
@@ -16,4 +20,21 @@ class Cell{
     // Cells known position in the maze, (posX, posY)=(0,0) at top left
     int posX;
     int posY;
+    // Draw to the given display with the given information
+    void draw(
+      Adafruit_ST7735& tft, 
+      int color, 
+      int width, 
+      int height, 
+      int paddingX, 
+      int paddingY, 
+      bool northEdgeBlocking,
+      bool eastEdgeBlocking,
+      bool southEdgeBlocking,
+      bool westEdgeBlocking,
+      int blockedEdgeColor,
+      int openEdgeColor
+      ); 
 };
+
+#endif
