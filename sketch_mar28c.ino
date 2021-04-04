@@ -47,9 +47,11 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 
 
 const int COLOR_PLAYER = tft.color565(0, 0, 255);
+const int COLOR_ENEMY = tft.color565(200, 25, 25);
 
 
 Player player;
+Player enemy;
 
 // The current level we are on
 int currentLevel = -1;
@@ -149,13 +151,23 @@ void detectInput(){
 
 
 
-
+/**
+ * Draws the player
+ */
 void drawPlayer(){
   tft.fillCircle(
     (player.col * maze->cellWidth) + maze->paddingX + (maze->cellWidth / 2), 
     (player.row * maze->cellHeight) + maze->paddingY + (maze->cellHeight / 2), 
     min(maze->cellWidth, maze->cellHeight) / 2 - 2, 
     COLOR_PLAYER);
+}
+
+void drawEnemy(){
+  tft.drawCircle(
+    (enemy.col * maze->cellWidth) + maze->paddingX + (maze->cellWidth / 2), 
+    (enemy.row * maze->cellHeight) + maze->paddingY + (maze->cellHeight / 2), 
+    min(maze->cellWidth, maze->cellHeight) / 2 - 2, 
+    COLOR_ENEMY);
 }
 
 void movePlayer(Direction dir){
@@ -165,8 +177,12 @@ void movePlayer(Direction dir){
   // Move allowed, proceed
   Serial.print("Moving: ");
   Serial.println(dir);
-  // Redraw the cell that is leaving
+  // Redraw the cell the player and enemy are leaving
   maze->drawCell(player.col, player.row);
+  maze->drawCell(enemy.col, enemy.row);
+  // Update the enemy position (who is your friend until later levels)
+  enemy.col = player.col;
+  enemy.row = player.row;
 
   // Update player position
   switch(dir){
@@ -190,4 +206,5 @@ void movePlayer(Direction dir){
   Serial.println(player.row);
   
   drawPlayer();
+  drawEnemy();
 }

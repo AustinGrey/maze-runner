@@ -11,12 +11,14 @@ void displayWelcomeForStage(Adafruit_ST7735 tft, int stage){
   // Reset screen
   tft.fillScreen(0x0000);
 
+  // Set text cursor up
+  tft.setCursor(0, 0);
+  tft.setTextColor(0xFFFF);
+  tft.setTextWrap(true);
+
   if(stage == 0){
     // Open title card welcome
-    tft.setCursor(0, 0);
-    tft.setTextColor(0xFFFF);
-    tft.setTextWrap(true);
-    tft.print("They're coming...");
+    tft.print("'They're coming...'");
   
     const char* splashText = "RUUNNNNN";
     int yOffset = 12;
@@ -33,7 +35,23 @@ void displayWelcomeForStage(Adafruit_ST7735 tft, int stage){
     }
   }
   else if (stage == 1){
-    // @todo more welcome stages
+    // Open title card welcome
+    tft.print("The door is locked,\nbut old.\n\n"); delay(3000);
+    tft.print("With both of your\nstrength you kick it\ndown and keep running"); delay(3000);
+  } 
+  else if (stage == 2){
+    tft.print("The barbed wire is\nmissing on this wall,\nyou could climb over!\n\n"); delay(3000);
+    tft.print("They help you up\nbut the top is slick\nwith algae\n\n");delay(3000);
+    tft.print("You fall onto the\nother side before you\ncan help them over."); delay(3000);
+  }
+  else if (stage == 3){
+    tft.print("You hear screaming in\nthe distance."); delay(3000);
+  }
+  else if (stage == 4){
+    tft.print("You know you're\ngetting farther, but\nwhat are you getting\ncloser to?"); delay(3000);
+  }
+  else if (stage == 5){
+    tft.print("You slam the door\nshut. Behind it you\nhear footsteps\napproaching"); delay(3000);
   }
 
   
