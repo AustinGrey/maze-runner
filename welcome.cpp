@@ -16,17 +16,17 @@ void displayWelcomeForStage(Adafruit_ST7735 tft, int stage){
     tft.setCursor(0, 0);
     tft.setTextColor(0xFFFF);
     tft.setTextWrap(true);
-    tft.print("Welcome to");
+    tft.print("They're coming...");
   
-    const char* splashText = "THE MAZE";
-    int yOffset = 8;
+    const char* splashText = "RUUNNNNN";
+    int yOffset = 12;
     int cursorX = (tft.width()- ((textWidth+1)*strlen(splashText))) / 2;
     int cursorY = ((tft.height()- textHeight) / 2) - yOffset;
     // All the way down
-    int colorInterval = 255/yOffset;
+    float colorInterval = 255/yOffset;
     for(int i = 0; i <= yOffset; i++){
       cursorY++;
-      tft.setTextColor(tft.color565(i * colorInterval, i * colorInterval, i * colorInterval));
+      tft.setTextColor(tft.color565(i * colorInterval, i * colorInterval / (i*i), i * colorInterval / (i*i)));
       tft.setCursor(cursorX, cursorY);
       tft.print(splashText);
       delay(100);

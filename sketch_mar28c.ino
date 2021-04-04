@@ -91,6 +91,7 @@ void loop() {
     player.col = 0;
     
     // Create the maze
+    delete maze;
     maze = new Maze(&tft, currentLevel + 4, currentLevel + 4);
   
     // Reset screen
