@@ -40,98 +40,32 @@ Maze::Maze(Adafruit_ST7735* tft_ptr, int numCols, int numRows){
   COLOR_EDGE_OPEN = COLOR_CELL_VISITED;
 
   // Init the cells
-  for(int i = 0; i < (sizeof(cells) / sizeof(cells[0])); i++){
+  for(int i = 0; i < numCells(); i++){
     cells[i].posX = i % numCols;
     cells[i].posY = i / numCols;
-//    Serial.print("Cell[");
-//    Serial.print(i);
-//    Serial.print("]: (");
-//    Serial.print(cells[i].posX);
-//    Serial.print(", ");
-//    Serial.print(cells[i].posY);
-//    Serial.println(")");
+    Serial.print("Cell[");
+    Serial.print(i);
+    Serial.print("]: (");
+    Serial.print(cells[i].posX);
+    Serial.print(", ");
+    Serial.print(cells[i].posY);
+    Serial.println(")");
   }
+  genMaze();
 }
 
-/**
- * Draws the maze to it's current display
- */
-void Maze::draw(){
-  for(auto&& cell: cells){
-    // Only draw cells that belong on the current size
-    if(cell.posX >= numCols || cell.posY >= numRows) continue;
-    cell.draw(
-      *tft_ptr,
-      cell.isEntrance
-        ? COLOR_CELL_ENTRANCE
-        : cell.isExit
-          ? COLOR_CELL_EXIT
-          : cell.visited 
-            ? COLOR_CELL_VISITED 
-            : COLOR_CELL_UNVISITED,
-      cellWidth,
-      cellHeight,
-      paddingX,
-      paddingY,
-      getCellEdge(cell.posX, cell.posY, north).isBlocking,
-      getCellEdge(cell.posX, cell.posY, east).isBlocking,
-      getCellEdge(cell.posX, cell.posY, south).isBlocking,
-      getCellEdge(cell.posX, cell.posY, west).isBlocking,
-      COLOR_EDGE_BLOCKING,
-      COLOR_EDGE_OPEN
-      );
-  }
-}
-
-/**
- * For the given cell, returns the edge of that cell in the given direction
- */
-Edge& Maze::getCellEdge(int cellX, int cellY, Direction dir){
-  int eastWestOffset = numCols * (numRows + 1);
-  switch(dir)
-  {
-    // N/S edges are stored first, so no need to jump to middle of array
-    case north: return edges[cellX + (cellY * numCols)];  
-    case south: return edges[cellX + ((cellY + 1) * numCols)];
-    // E/W edges stored last, must skip all N/S edges first
-    case west: return edges[eastWestOffset + cellX + (cellY * (numCols + 1))];
-    case east: return edges[eastWestOffset + (cellX + 1) + (cellY * (numCols + 1))];
-  }
-}
-
-/**
- * Gets the cell at the given position
- */
-Cell* Maze::getCell(int col, int row){
-  return &cells[col + (row * numCols)];
-}
-
-/**
- * Gets a pointer to a random cell that is unvisited
- * If all cells have been visited, returns a null pointer
- */
-Cell* Maze::getUnvisitedCell(){
-  // Gather list of unvisited cells
-  int cellArrSize = sizeof(cells[0]) * (numCols * numRows - 1);
-  int numUnvisited = 0;
-  LinkedList<Cell*> unvisitedCells;
-  for(int i = 0; i < cellArrSize; i++){
-    if(!cells[i].visited){
-      unvisitedCells.add(&cells[i]);
-      numUnvisited++;
-    }
-  }
-
-  if(numUnvisited == 0){
-    return NULL;
-  } else {
-    return unvisitedCells.get(random(unvisitedCells.size()));
-  }
+int Maze::numCells(){
+  return numCols * numRows;
 }
 
 void Maze::genMaze(){
   // Mark a random cell as part of the maze (the seed cell)
-  getUnvisitedCell()->visited = true;
+  Cell* unvisitedCell = getUnvisitedCell();
+  unvisitedCell->visited = true;
+  Serial.print("Seed Cell: ");
+  Serial.print(unvisitedCell->posX);
+  Serial.print(", ");
+  Serial.print(unvisitedCell->posY);
 
   
   while(genPath()){
@@ -217,14 +151,22 @@ bool Maze::genPath(){
   // Walk the discovered path and setup the edges for those cells
   currentCell = pathStart;
   while(!currentCell->visited){
-//    Serial.print("Walking ");
-//    Serial.print(currentCell->lastWalked);
-//    Serial.print(currentCell->lastWalked == north ? "north" : currentCell->lastWalked == east ? "east" : currentCell->lastWalked == south ? "south" : currentCell->lastWalked == west ? "west" : "err");
-//    Serial.print(" on cell (");
-//    Serial.print(currentCell->posX);
-//    Serial.print(", ");
-//    Serial.print(currentCell->posY);
-//    Serial.println(")");
+    Serial.print("Walking ");
+    Serial.print(currentCell->lastWalked);
+    Serial.print(currentCell->lastWalked == north 
+      ? "north" 
+      : currentCell->lastWalked == east 
+        ? "east" 
+        : currentCell->lastWalked == south 
+          ? "south" 
+          : currentCell->lastWalked == west 
+            ? "west" 
+            : "err");
+    Serial.print(" on cell (");
+    Serial.print(currentCell->posX);
+    Serial.print(", ");
+    Serial.print(currentCell->posY);
+    Serial.println(")");
     currentCell->visited = true;
     getCellEdge(currentCell->posX, currentCell->posY, currentCell->lastWalked).isBlocking = false;
     drawCell(currentCell->posX, currentCell->posY);
@@ -246,6 +188,80 @@ bool Maze::genPath(){
   drawCell(currentCell->posX, currentCell->posY);
 
   return true;
+}
+
+/**
+ * Draws the maze to it's current display
+ */
+void Maze::draw(){
+  for(int i = 0; i < numCells(); i++){
+    Cell& cell = cells[i];
+    cell.draw(
+      *tft_ptr,
+      cell.isEntrance
+        ? COLOR_CELL_ENTRANCE
+        : cell.isExit
+          ? COLOR_CELL_EXIT
+          : cell.visited 
+            ? COLOR_CELL_VISITED 
+            : COLOR_CELL_UNVISITED,
+      cellWidth,
+      cellHeight,
+      paddingX,
+      paddingY,
+      getCellEdge(cell.posX, cell.posY, north).isBlocking,
+      getCellEdge(cell.posX, cell.posY, east).isBlocking,
+      getCellEdge(cell.posX, cell.posY, south).isBlocking,
+      getCellEdge(cell.posX, cell.posY, west).isBlocking,
+      COLOR_EDGE_BLOCKING,
+      COLOR_EDGE_OPEN
+      );
+  }
+}
+
+/**
+ * For the given cell, returns the edge of that cell in the given direction
+ */
+Edge& Maze::getCellEdge(int cellX, int cellY, Direction dir){
+  int eastWestOffset = numCols * (numRows + 1);
+  switch(dir)
+  {
+    // N/S edges are stored first, so no need to jump to middle of array
+    case north: return edges[cellX + (cellY * numCols)];  
+    case south: return edges[cellX + ((cellY + 1) * numCols)];
+    // E/W edges stored last, must skip all N/S edges first
+    case west: return edges[eastWestOffset + cellX + (cellY * (numCols + 1))];
+    case east: return edges[eastWestOffset + (cellX + 1) + (cellY * (numCols + 1))];
+  }
+}
+
+/**
+ * Gets the cell at the given position
+ */
+Cell* Maze::getCell(int col, int row){
+  return &cells[col + (row * numCols)];
+}
+
+/**
+ * Gets a pointer to a random cell that is unvisited
+ * If all cells have been visited, returns a null pointer
+ */
+Cell* Maze::getUnvisitedCell(){
+  // Gather list of unvisited cells
+  int numUnvisited = 0;
+  LinkedList<Cell*> unvisitedCells;
+  for(int i = 0; i < numCells(); i++){
+    if(!cells[i].visited){
+      unvisitedCells.add(&cells[i]);
+      numUnvisited++;
+    }
+  }
+
+  if(numUnvisited == 0){
+    return NULL;
+  } else {
+    return unvisitedCells.get(random(unvisitedCells.size()));
+  }
 }
 
 void Maze::drawCell(int cellX, int cellY){
@@ -270,4 +286,33 @@ void Maze::drawCell(int cellX, int cellY){
     COLOR_EDGE_BLOCKING,
     COLOR_EDGE_OPEN
     );
+}
+
+/**
+ * Returns true if movement is allowed in the given direction from the given cell
+ */
+bool Maze::checkMove(int cellX, int cellY, Direction dir){
+  // Prevent leaving maze boundary
+  if(
+    (dir == north && cellY == 0)
+    || (dir == east && cellX == numCols - 1)
+    || (dir == south && cellY == numRows - 1)
+    || (dir == west && cellX == 0)
+    )
+    {
+      // The move is illegal and nothing happens
+      Serial.print("Illegal move through maze edge:");
+      Serial.println(dir);
+      return false;
+    }
+  // Prevent illegal moves through walls
+  Cell& currentCell = *getCell(cellX, cellY);
+  if(getCellEdge(currentCell.posX, currentCell.posY, dir).isBlocking){
+    // The move is illegal and nothing happens
+    Serial.print("Illegal move through wall:");
+    Serial.println(dir);
+    return false;
+  }
+  
+  return true;
 }

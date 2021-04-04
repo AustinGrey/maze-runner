@@ -34,7 +34,8 @@ class Cell{
       bool westEdgeBlocking,
       int blockedEdgeColor,
       int openEdgeColor
-      ); 
+      );
+    String toString();
 };
 
 #endif

@@ -36,29 +36,6 @@
 // For 1.44" and 1.8" TFT with ST7735 use:
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
 
-// Given the size of the maze, determine the size of the cells on this display
-const int numRows = 10;
-const int numCols = 8;
-
-// The screen dimensions are always -2, to ensure at least a 1 px border around the maze for the outer edges to show
-// We do not allow fractional cell widths and heights since that causes odd drawing behaviour
-const int cellWidth = (tft.width() - 2) / numCols;
-const int cellHeight = (tft.height() - 2) / numRows;
-// Calculate the spacing that would go around this maze so that it is centered since we do not allow fractional cell widths and heights
-const int paddingY = ((tft.height() - 2) - (cellHeight * numRows)) / 2;
-const int paddingX = ((tft.width() - 2) - (cellWidth * numCols)) / 2;
-
-const int COLOR_CELL_ENTRANCE = tft.color565(200, 50, 50);
-const int COLOR_CELL_EXIT = tft.color565(50, 200, 50);
-const int COLOR_CELL_VISITED = 0xFFFF;
-const int COLOR_CELL_UNVISITED = tft.color565(100, 100, 170);
-
-const int COLOR_EDGE_BLOCKING = tft.color565(0, 0, 0);
-const int COLOR_EDGE_OPEN = COLOR_CELL_VISITED;
-
-const int COLOR_PLAYER = tft.color565(0, 0, 255);
-
-
 // Joystick
 #define PIN_JOYSTICK_V 0 // Analog
 #define PIN_JOYSTICK_H 1 // Analog
@@ -69,12 +46,12 @@ const int COLOR_PLAYER = tft.color565(0, 0, 255);
 #define JOYSTICK_H_RANGE 1023 // The possible range of values for the joystick, half of this is the center of the joystick
 
 
-
+const int COLOR_PLAYER = tft.color565(0, 0, 255);
 
 
 Player player;
 
-int currentLevel = 0;
+int currentLevel = 10;
 
 Maze* maze;
 
@@ -164,38 +141,21 @@ void detectInput(){
 
 void drawPlayer(){
   tft.fillCircle(
-    (player.col * cellWidth) + paddingX + (cellWidth / 2), 
-    (player.row * cellHeight) + paddingY + (cellHeight / 2), 
-    min(cellWidth, cellHeight) / 2 - 2, 
+    (player.col * maze->cellWidth) + maze->paddingX + (maze->cellWidth / 2), 
+    (player.row * maze->cellHeight) + maze->paddingY + (maze->cellHeight / 2), 
+    min(maze->cellWidth, maze->cellHeight) / 2 - 2, 
     COLOR_PLAYER);
 }
 
 void movePlayer(Direction dir){
-  // Prevent illegal edge moves
-  if(
-    (dir == north && player.row == 0)
-    || (dir == east && player.col == numCols - 1)
-    || (dir == south && player.row == numRows - 1)
-    || (dir == west && player.col == 0)
-    )
-    {
-      // The move is illegal and nothing happens
-      Serial.print("Illegal move through maze edge:");
-      Serial.println(dir);
-      return;
-    }
-  // Prevent illegal moves through walls
-  Cell& currentCell = *maze->getCell(player.col, player.row);
-  if(maze->getCellEdge(currentCell.posX, currentCell.posY, dir).isBlocking){
-    // The move is illegal and nothing happens
-    Serial.print("Illegal move through wall:");
-    Serial.println(dir);
-    return;
-  }
+  // Do not allow illegal moves
+  if(!maze->checkMove(player.col, player.row, dir)) return;
+
+  // Move allowed, proceed
   Serial.print("Moving: ");
   Serial.println(dir);
   // Redraw the cell that is leaving
-  maze->drawCell(currentCell.posX, currentCell.posY);
+  maze->drawCell(player.col, player.row);
 
   // Update player position
   switch(dir){

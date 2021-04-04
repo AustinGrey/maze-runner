@@ -62,3 +62,11 @@ void Cell::draw(
 //    );
 //  }
 }
+
+String Cell::toString(){
+  return String("Cell(")
+    +String(posX)
+    +String(",")
+    +String(posY)
+    +String(")");
+}

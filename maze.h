@@ -24,12 +24,7 @@ class Maze{
     // Edge edges[(numCols * (numRows + 1)) + (numRows * (numCols + 1))];
     Edge edges[(MAX_COLS * (MAX_ROWS + 1)) + (MAX_ROWS * (MAX_COLS + 1))];
     
-
-    int cellWidth;
-    int cellHeight;
-    // Calculate the spacing that would go around this maze so that it is centered since we do not allow fractional cell widths and heights
-    int paddingY;
-    int paddingX;
+    
 
     // The cells the maze start and finish at
     Cell& start = cells[0];
@@ -53,6 +48,7 @@ class Maze{
     static int COLOR_EDGE_OPEN;
 
     bool genPath();
+    int numCells();
     
   public:
     Maze(Adafruit_ST7735* tft_ptr, int numCols, int numRows);
@@ -60,6 +56,15 @@ class Maze{
     void drawCell(int cellX, int cellY);
     Edge& getCellEdge(int cellX, int cellY, Direction dir);
     Cell* getCell(int col, int row);
+
+    // The shape of cells within the maze on the display this maze is for
+    int cellWidth;
+    int cellHeight;
+    // The spacing around the maze to ensure it is centered since we don't allow fractional cell dimensions to fill the screen
+    int paddingY;
+    int paddingX;
+
+    bool checkMove(int cellX, int cellY, Direction dir);
  };
 
 #endif
